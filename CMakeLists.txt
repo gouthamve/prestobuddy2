@@ -87,7 +87,7 @@ if(BUDDY_TARGET STREQUAL "sim")
         set(SDL_STATIC ON CACHE BOOL "" FORCE)
         set(SDL_TEST OFF CACHE BOOL "" FORCE)
         # renovate: datasource=github-releases depName=libsdl-org/SDL extractVersion=^release-(?<version>2\..+)$
-        set(BUDDY_SDL_VERSION 2.32.8)
+        set(BUDDY_SDL_VERSION 2.32.10)
         FetchContent_Declare(SDL2 URL https://github.com/libsdl-org/SDL/releases/download/release-${BUDDY_SDL_VERSION}/SDL2-${BUDDY_SDL_VERSION}.tar.gz)
         FetchContent_MakeAvailable(SDL2)
         target_compile_definitions(lvgl PUBLIC BUDDY_SIM_SDL=1)
