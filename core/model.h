@@ -37,6 +37,8 @@ struct Settings {
     uint8_t short_min = 5;
     uint8_t long_min = 15;
     uint8_t long_every = 4;
+    uint8_t backlight = 80;    // screen, 5-100
+    uint8_t quiet_backlight = 20;  // screen during quiet hours, 5-100
     uint8_t led = 60;          // 0-100
     bool sound = true;
     uint8_t volume = 50;       // 0-100

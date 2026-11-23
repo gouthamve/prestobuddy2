@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -115,5 +116,28 @@ func TestParseOrcaWrappedResult(t *testing.T) {
 	}
 	if len(agents) != 1 || agents[0].ID != "s1" || agents[0].Name != "fix-bug" || agents[0].State != "working" {
 		t.Fatalf("got %+v", agents)
+	}
+}
+
+func TestSettingsBacklight(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "state.json")
+	// A state file from before the screen settings existed keeps the defaults.
+	if err := os.WriteFile(path, []byte(`{"settings":{"focus_min":30,"led":40}}`), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	s, err := OpenStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Snapshot().Settings; got.Backlight != 80 || got.QuietLight != 20 || got.FocusMin != 30 {
+		t.Fatalf("unexpected settings after load: %+v", got)
+	}
+	n := s.Snapshot().Settings
+	n.Backlight, n.QuietLight = 0, 250
+	if err := s.SetSettings(n); err != nil {
+		t.Fatal(err)
+	}
+	if got := s.Snapshot().Settings; got.Backlight != 5 || got.QuietLight != 100 {
+		t.Fatalf("backlight not clamped: %+v", got)
 	}
 }

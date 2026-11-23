@@ -247,7 +247,9 @@ void tone(uint16_t freq_hz, uint8_t volume) {
     if (headless) printf("[%6u] tone %u vol %u\n", (unsigned)millis(), freq_hz, volume);
 }
 
-void set_backlight(uint8_t) {}
+void set_backlight(uint8_t level) {
+    if (headless) printf("[%6u] backlight %u\n", (unsigned)millis(), level);
+}
 
 LinkState link_state() { return demo ? LinkState::Connected : (use_net ? link_st : LinkState::NoWifi); }
 

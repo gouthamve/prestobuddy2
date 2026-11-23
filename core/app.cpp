@@ -26,7 +26,7 @@ Page cur = Home;
 bool was_connected = false;
 char last_status[200] = "";
 model::BreathStage last_stage = model::BreathStage::HoldOut;
-bool was_quiet = false;
+int last_backlight = -1;
 uint32_t last_alert_act = 0;
 uint32_t frames_drawn = 0, last_stats = 0;
 uint32_t render_t0 = 0, render_ms_sum = 0, render_ms_max = 0;
@@ -408,11 +408,12 @@ void app_tick() {
     if (t.total_ms) fx::set_progress((float)t.elapsed_ms / (float)t.total_ms);
     fx::tick();
 
-    // ---- quiet hours dim the screen ----
+    // ---- screen brightness, with its own level for quiet hours ----
     const bool quiet = model::quiet_now();
-    if (quiet != was_quiet) {
-        was_quiet = quiet;
-        hal::set_backlight(quiet ? 50 : 200);
+    const int backlight = ((quiet ? m.settings.quiet_backlight : m.settings.backlight) * 255 + 50) / 100;
+    if (backlight != last_backlight) {
+        last_backlight = backlight;
+        hal::set_backlight((uint8_t)backlight);
     }
 
     // ---- moods ----

@@ -67,6 +67,11 @@
   .grid input[type=number], .grid input[type=text], .grid select {
       background: var(--bg); border: 2px solid var(--card-hi); border-radius: 10px; padding: 6px 10px; color: var(--text); }
   .grid .inline { flex-direction: row; align-items: center; gap: 8px; }
+  .grid .head { display: flex; justify-content: space-between; gap: 8px; }
+  .grid output { color: var(--text); font-variant-numeric: tabular-nums; }
+  .grid input[type=range] { accent-color: var(--gold); }
+  .grid label.off { opacity: 0.5; }
+  h3 { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 0; }
   #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--danger);
            color: #fff; padding: 10px 18px; border-radius: 99px; display: none; }
   @media (max-width: 560px) { .est { display: none; } header img { width: 48px; height: 72px; } }
@@ -122,15 +127,26 @@
   <div class="card">
     <details>
       <summary>Settings</summary>
-      <div class="grid" id="settings">
+      <div id="settings">
+      <h3>Display</h3>
+      <div class="grid">
+        <label><span class="head">Screen brightness<output data-for="backlight"></output></span>
+          <input type="range" min="5" max="100" step="5" data-k="backlight"></label>
+        <label id="quietlight"><span class="head">Screen in quiet hours<output data-for="quiet_backlight"></output></span>
+          <input type="range" min="5" max="100" step="5" data-k="quiet_backlight"></label>
+        <label><span class="head">LED brightness<output data-for="led"></output></span>
+          <input type="range" min="0" max="100" data-k="led"></label>
+      </div>
+      <h3>Timer, sound and alerts</h3>
+      <div class="grid">
         <label>Focus length (minutes)<input type="number" min="1" max="180" data-k="focus_min"></label>
         <label>Short break (minutes)<input type="number" min="1" max="60" data-k="short_min"></label>
         <label>Long break (minutes)<input type="number" min="1" max="90" data-k="long_min"></label>
         <label>Long break every N sessions<input type="number" min="2" max="10" data-k="long_every"></label>
-        <label>LED brightness<input type="range" min="0" max="100" data-k="led"></label>
-        <label>Volume<input type="range" min="0" max="100" data-k="volume"></label>
+        <label><span class="head">Volume<output data-for="volume"></output></span>
+          <input type="range" min="0" max="100" data-k="volume"></label>
         <label class="inline"><input type="checkbox" data-k="sound"> Sound on</label>
-        <label class="inline"><input type="checkbox" data-k="quiet"> Quiet hours (LEDs and sound off)</label>
+        <label class="inline"><input type="checkbox" data-k="quiet"> Quiet hours (LEDs and sound off, screen dimmed)</label>
         <label>Quiet from (hour)<input type="number" min="0" max="23" data-k="quiet_from"></label>
         <label>Quiet until (hour)<input type="number" min="0" max="23" data-k="quiet_to"></label>
         <label>Agent alerts while focusing
@@ -140,6 +156,7 @@
             <option value="full">Full alert</option>
           </select></label>
         <label>Mascot name<input type="text" maxlength="20" data-k="name"></label>
+      </div>
       </div>
     </details>
   </div>
@@ -229,10 +246,14 @@ function renderRest() {
   $('fake').hidden = !S.fake_agents;
 
   for (const inp of document.querySelectorAll('#settings [data-k]')) {
-    if (inp === document.activeElement) continue;
-    const v = S.settings[inp.dataset.k];
-    if (inp.type === 'checkbox') inp.checked = !!v; else inp.value = v;
+    if (inp !== document.activeElement) {
+      const v = S.settings[inp.dataset.k];
+      if (inp.type === 'checkbox') inp.checked = !!v; else inp.value = v;
+    }
+    showValue(inp);
   }
+  $('quietlight').classList.toggle('off', !S.settings.quiet);
+  $('quietlight').title = S.settings.quiet ? '' : 'Used when quiet hours are on';
   renderTimer();
 }
 
@@ -280,7 +301,12 @@ $('tbreak').onclick = () => api('POST', '/api/timer', {action: 'break', min: 0})
 $('tstop').onclick = () => api('POST', '/api/timer', {action: 'stop'});
 for (const b of document.querySelectorAll('[data-fake]'))
   b.onclick = () => api('POST', '/api/fake-agent', {name: $('fakename').value.trim(), state: b.dataset.fake});
+function showValue(inp) {
+  const out = document.querySelector('output[data-for="' + inp.dataset.k + '"]');
+  if (out) out.textContent = inp.value + '%';
+}
 for (const inp of document.querySelectorAll('#settings [data-k]')) {
+  inp.oninput = () => showValue(inp);
   inp.onchange = () => {
     const v = inp.type === 'checkbox' ? inp.checked : (inp.type === 'text' || inp.tagName === 'SELECT' ? inp.value : +inp.value);
     api('PUT', '/api/settings', {[inp.dataset.k]: v});

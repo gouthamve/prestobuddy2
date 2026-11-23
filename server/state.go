@@ -39,6 +39,8 @@ type Settings struct {
 	ShortMin    int    `json:"short_min"`
 	LongMin     int    `json:"long_min"`
 	LongEvery   int    `json:"long_every"`
+	Backlight   int    `json:"backlight"`       // screen, percent
+	QuietLight  int    `json:"quiet_backlight"` // screen during quiet hours, percent
 	LED         int    `json:"led"`
 	Sound       bool   `json:"sound"`
 	Volume      int    `json:"volume"`
@@ -50,8 +52,8 @@ type Settings struct {
 }
 
 func defaultSettings() Settings {
-	return Settings{FocusMin: 25, ShortMin: 5, LongMin: 15, LongEvery: 4, LED: 60, Sound: true, Volume: 50,
-		QuietFrom: 22, QuietTo: 7, FocusAlerts: "soft", Name: "Garder"}
+	return Settings{FocusMin: 25, ShortMin: 5, LongMin: 15, LongEvery: 4, Backlight: 80, QuietLight: 20, LED: 60,
+		Sound: true, Volume: 50, QuietFrom: 22, QuietTo: 7, FocusAlerts: "soft", Name: "Garder"}
 }
 
 func (s *Settings) sanitize() {
@@ -67,6 +69,9 @@ func (s *Settings) sanitize() {
 	clamp(&s.ShortMin, 1, 60)
 	clamp(&s.LongMin, 1, 90)
 	clamp(&s.LongEvery, 2, 10)
+	// The screen never goes fully dark: with no way to wake it, it would look dead.
+	clamp(&s.Backlight, 5, 100)
+	clamp(&s.QuietLight, 5, 100)
 	clamp(&s.LED, 0, 100)
 	clamp(&s.Volume, 0, 100)
 	clamp(&s.QuietFrom, 0, 23)

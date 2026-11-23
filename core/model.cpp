@@ -147,6 +147,8 @@ void apply_settings(const cJSON* s, Change* ch) {
     n.short_min = clamp8(num(s, "short_min", n.short_min), 1, 60);
     n.long_min = clamp8(num(s, "long_min", n.long_min), 1, 90);
     n.long_every = clamp8(num(s, "long_every", n.long_every), 2, 10);
+    n.backlight = clamp8(num(s, "backlight", n.backlight), 5, 100);
+    n.quiet_backlight = clamp8(num(s, "quiet_backlight", n.quiet_backlight), 5, 100);
     n.led = clamp8(num(s, "led", n.led), 0, 100);
     n.sound = boolean(s, "sound", n.sound);
     n.volume = clamp8(num(s, "volume", n.volume), 0, 100);
