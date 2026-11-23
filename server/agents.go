@@ -58,6 +58,10 @@ func parseOrca(out []byte) ([]Agent, error) {
 	case []any:
 		items = v
 	case map[string]any:
+		// Orca wraps its output as {"ok":true,"result":{"agents":[...]}}.
+		if res, ok := v["result"].(map[string]any); ok {
+			v = res
+		}
 		for _, key := range []string{"agents", "sessions", "items", "data"} {
 			if arr, ok := v[key].([]any); ok {
 				items = arr

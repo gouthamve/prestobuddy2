@@ -106,3 +106,14 @@ func TestStoreGoalsSessionsAndCarryOver(t *testing.T) {
 		t.Fatalf("unexpected carried goal: %+v", snap.Goals)
 	}
 }
+
+func TestParseOrcaWrappedResult(t *testing.T) {
+	out := []byte(`{"id":"x","ok":true,"result":{"agents":[{"orcaSessionId":"s1","agent":"claude","state":"working","title":"fix-bug","workspace":"ws"}]}}`)
+	agents, err := parseOrca(out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(agents) != 1 || agents[0].ID != "s1" || agents[0].Name != "fix-bug" || agents[0].State != "working" {
+		t.Fatalf("got %+v", agents)
+	}
+}
