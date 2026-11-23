@@ -70,8 +70,7 @@ void build(lv_obj_t* page) {
     lv_obj_set_pos(cap, 18, 9);
     pick_title = label(chip, "", &font_ui_20, kText);
     lv_obj_set_pos(pick_title, 18, 33);
-    lv_obj_set_width(pick_title, 396);
-    lv_label_set_long_mode(pick_title, LV_LABEL_LONG_MODE_DOTS);
+    one_line(pick_title, 396);
 
     for (int i = 0; i < 3; i++) {
         lv_obj_t* b = card(idle_v, 24 + i * 148, 152, 136, 88, i == 0 ? kFocus : kCard);
@@ -102,7 +101,9 @@ void build(lv_obj_t* page) {
     phase_l = label(run_v, "FOCUS", &font_ui_16, kMuted);
     lv_obj_set_width(phase_l, 200);
     lv_obj_set_style_text_align(phase_l, LV_TEXT_ALIGN_CENTER, 0);
-    lv_obj_set_pos(phase_l, 140, 72);
+    // The time is centred in the ring (arc centre y = 14 + 256/2); the phase sits above it.
+    const int time_y = 14 + 128 - font_timer_72.line_height / 2;
+    lv_obj_set_pos(phase_l, 140, time_y - 28);
 
     // Each digit sits in its own fixed cell so the time doesn't jiggle.
     const int cell = 44, colon = 22, total = 4 * cell + colon, x0 = 240 - total / 2;
@@ -112,13 +113,12 @@ void build(lv_obj_t* page) {
         digit[i] = label(run_v, i == 2 ? ":" : "0", &font_timer_72, kText);
         lv_obj_set_width(digit[i], w);
         lv_obj_set_style_text_align(digit[i], LV_TEXT_ALIGN_CENTER, 0);
-        lv_obj_set_pos(digit[i], x, 98);
+        lv_obj_set_pos(digit[i], x, time_y);
     }
 
     goal_l = label(run_v, "", &font_ui_20, kText);
-    lv_obj_set_width(goal_l, 432);
+    one_line(goal_l, 432);
     lv_obj_set_style_text_align(goal_l, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_long_mode(goal_l, LV_LABEL_LONG_MODE_DOTS);
     lv_obj_set_pos(goal_l, 24, 284);
 
     pause_btn = icon_button(run_v, 174, 328, 60, &icon_pause, kCard, kText, on_pause);

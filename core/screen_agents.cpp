@@ -120,8 +120,7 @@ void refresh() {
 
         lv_obj_t* name = label(row, a.name, &font_ui_20, kText);
         lv_obj_set_pos(name, 52, 9);
-        lv_obj_set_width(name, 270);
-        lv_label_set_long_mode(name, LV_LABEL_LONG_MODE_DOTS);
+        one_line(name, 270);
 
         char when[24];
         ago(a.since, when, sizeof(when));

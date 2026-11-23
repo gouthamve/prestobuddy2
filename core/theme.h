@@ -52,6 +52,13 @@ inline lv_obj_t* label(lv_obj_t* parent, const char* text, const lv_font_t* font
     return l;
 }
 
+// One line, `w` wide, ending in "..." when the text is longer. LVGL only truncates
+// with DOTS when the height is fixed; with just a width it wraps onto more lines.
+inline void one_line(lv_obj_t* l, int32_t w) {
+    lv_obj_set_size(l, w, lv_font_get_line_height(lv_obj_get_style_text_font(l, LV_PART_MAIN)));
+    lv_label_set_long_mode(l, LV_LABEL_LONG_MODE_DOTS);
+}
+
 // lv_label_set_text always invalidates; skip it when nothing changed.
 inline void set_text(lv_obj_t* l, const char* text) {
     if (strcmp(lv_label_get_text(l), text) != 0) lv_label_set_text(l, text);

@@ -318,9 +318,8 @@ void app_init() {
     banner = card(lv_layer_top(), 20, -70, 440, 56, kAmber, 28);
     make_button(banner, on_banner, nullptr, 0xFFC860);
     banner_l = label(banner, "", &font_ui_20, kInk);
-    lv_obj_set_width(banner_l, 400);
+    one_line(banner_l, 400);
     lv_obj_set_style_text_align(banner_l, LV_TEXT_ALIGN_CENTER, 0);
-    lv_label_set_long_mode(banner_l, LV_LABEL_LONG_MODE_DOTS);
     lv_obj_center(banner_l);
 
     hal::link_set_handler(on_line, nullptr);
