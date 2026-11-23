@@ -1,6 +1,6 @@
 # Build toolchain for prestobuddy2: firmware cross-compile, asset pipeline,
 # headless simulator and tests. Nothing here is needed on the host.
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends \
