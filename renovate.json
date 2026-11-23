@@ -1,0 +1,30 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "git-submodules": {
+    "enabled": true
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Versions pinned in CMake and the Dockerfile, marked with a '# renovate:' comment on the line above",
+      "managerFilePatterns": ["/(^|/)CMakeLists\\.txt$/", "/(^|/)Dockerfile$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\s+(?:set\\(|ARG )\\w+[ =](?<currentValue>[^\\s)]+)"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "The Pico SDK, LVGL and the Presto drivers can break the firmware, so label them for a build and a check on the device",
+      "matchManagers": ["git-submodules"],
+      "labels": ["firmware"]
+    },
+    {
+      "description": "LVGL majors change the API the whole UI is written against",
+      "matchPackageNames": ["third_party/lvgl"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    }
+  ]
+}

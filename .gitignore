@@ -1,0 +1,8 @@
+build/
+build-*/
+.venv/
+frames/
+platform/presto/secrets.h
+*.uf2
+.DS_Store
+backup/

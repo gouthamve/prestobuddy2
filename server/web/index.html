@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PrestoBuddy</title>
+<link rel="icon" href="mascot.svg">
+<style>
+  :root {
+    --bg: #151b33; --card: #232c50; --card-hi: #303b69; --text: #f4f6ff; --muted: #9aa6d1;
+    --gold: #ffc94a; --focus: #ff6b6b; --break: #5bd68b; --teal: #4fd1c5; --amber: #ffb020; --danger: #ff5d73;
+    --ink: #151b33;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 16px/1.45 ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 64px; }
+  header { display: flex; align-items: center; gap: 16px; margin-bottom: 20px; }
+  header img { width: 64px; height: 96px; flex: none; }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.01em; }
+  .sub { color: var(--muted); }
+  .pill { display: inline-flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: 99px;
+          background: var(--card); color: var(--muted); font-size: 14px; white-space: nowrap; }
+  .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.on { background: var(--break); } .dot.working { background: var(--break); }
+  .dot.waiting, .dot.blocked { background: var(--amber); } .dot.failed { background: var(--danger); }
+  .card { background: var(--card); border-radius: 18px; padding: 16px 18px; margin-bottom: 16px; }
+  h2 { font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin: 0 0 10px; }
+  input, select, button { font: inherit; color: inherit; }
+  #add { width: 100%; padding: 14px 18px; border-radius: 16px; border: 2px solid var(--card-hi);
+         background: var(--card); font-size: 18px; outline: none; }
+  #add:focus { border-color: var(--gold); }
+  .hint { color: var(--muted); font-size: 13px; margin: 6px 4px 18px; }
+  kbd { background: var(--card); border-radius: 5px; padding: 1px 6px; font: inherit; font-size: 12px; }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li.goal { display: flex; align-items: center; gap: 10px; background: var(--card); border-radius: 16px;
+            padding: 10px 12px; margin-bottom: 8px; }
+  li.goal.dragging { opacity: 0.4; } li.goal.over { outline: 2px dashed var(--gold); }
+  li.goal.done .title { color: var(--muted); text-decoration: line-through; }
+  .grip { cursor: grab; color: var(--card-hi); user-select: none; padding: 0 2px; }
+  .check { width: 28px; height: 28px; border-radius: 50%; border: 3px solid var(--muted); background: none;
+           cursor: pointer; flex: none; padding: 0; display: grid; place-items: center; color: var(--ink); }
+  .done .check { background: var(--break); border-color: var(--break); }
+  .title { flex: 1; min-width: 0; padding: 4px 6px; border-radius: 8px; border: 2px solid transparent;
+           background: none; outline: none; font-size: 17px; text-overflow: ellipsis; }
+  .title:focus { border-color: var(--card-hi); background: var(--bg); }
+  .est { display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 14px; white-space: nowrap; }
+  button.sm { border: 0; background: var(--card-hi); border-radius: 8px; min-width: 26px; height: 26px; cursor: pointer; }
+  button.sm:hover { filter: brightness(1.2); }
+  button.go { border: 0; background: var(--gold); color: var(--ink); font-weight: 700; border-radius: 99px;
+              padding: 6px 14px; cursor: pointer; white-space: nowrap; }
+  button.ghost { border: 0; background: var(--card-hi); border-radius: 99px; padding: 6px 14px; cursor: pointer; }
+  button.x { border: 0; background: none; color: var(--muted); cursor: pointer; font-size: 18px; padding: 2px 6px; }
+  button.x:hover { color: var(--danger); }
+  button:disabled { opacity: 0.4; cursor: default; }
+  .row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .time { font-size: 40px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); padding: 18px 4px; }
+  .agent { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+  .agent .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .state { font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .state.waiting, .state.blocked { color: var(--amber); } .state.failed { color: var(--danger); }
+  .state.working { color: var(--break); }
+  details summary { cursor: pointer; color: var(--muted); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 12px 20px; margin-top: 14px; }
+  .grid label { display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+  .grid input[type=number], .grid input[type=text], .grid select {
+      background: var(--bg); border: 2px solid var(--card-hi); border-radius: 10px; padding: 6px 10px; color: var(--text); }
+  .grid .inline { flex-direction: row; align-items: center; gap: 8px; }
+  #toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); background: var(--danger);
+           color: #fff; padding: 10px 18px; border-radius: 99px; display: none; }
+  @media (max-width: 560px) { .est { display: none; } header img { width: 48px; height: 72px; } }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <img src="mascot.svg" alt="">
+    <div style="flex:1; min-width:0">
+      <h1 id="heading">Today</h1>
+      <div class="sub" id="summary"></div>
+    </div>
+    <span class="pill"><span class="dot" id="devdot"></span><span id="devtext">Presto offline</span></span>
+  </header>
+
+  <input id="add" autofocus autocomplete="off" placeholder="What do you want to get done today?">
+  <div class="hint"><kbd>Enter</kbd> adds a goal. End with <kbd>x3</kbd> to plan three focus sessions. <kbd>/</kbd> jumps back here.</div>
+
+  <div class="card" id="carry" hidden>
+    <div class="row"><span style="flex:1" id="carrytext"></span><button class="go" id="carrybtn">Bring them over</button></div>
+  </div>
+
+  <ul id="goals"></ul>
+
+  <div class="card">
+    <h2>Timer</h2>
+    <div class="row">
+      <div style="flex:1; min-width: 180px">
+        <div class="time" id="time">--:--</div>
+        <div class="sub" id="timerlabel">Nothing running</div>
+      </div>
+      <button class="go" id="tfocus">Start focus</button>
+      <button class="ghost" id="tpause">Pause</button>
+      <button class="ghost" id="tbreak">Break</button>
+      <button class="ghost" id="tstop">Stop</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Agents</h2>
+    <div id="agents"></div>
+    <div id="fake" hidden class="row" style="margin-top:10px">
+      <input id="fakename" class="title" style="flex:1; border-color: var(--card-hi)" value="fix-auth-refresh" aria-label="Fake agent name">
+      <button class="ghost" data-fake="working">working</button>
+      <button class="ghost" data-fake="waiting">waiting</button>
+      <button class="ghost" data-fake="done">done</button>
+      <button class="ghost" data-fake="failed">failed</button>
+      <button class="ghost" data-fake="gone">remove</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>Settings</summary>
+      <div class="grid" id="settings">
+        <label>Focus length (minutes)<input type="number" min="1" max="180" data-k="focus_min"></label>
+        <label>Short break (minutes)<input type="number" min="1" max="60" data-k="short_min"></label>
+        <label>Long break (minutes)<input type="number" min="1" max="90" data-k="long_min"></label>
+        <label>Long break every N sessions<input type="number" min="2" max="10" data-k="long_every"></label>
+        <label>LED brightness<input type="range" min="0" max="100" data-k="led"></label>
+        <label>Volume<input type="range" min="0" max="100" data-k="volume"></label>
+        <label class="inline"><input type="checkbox" data-k="sound"> Sound on</label>
+        <label class="inline"><input type="checkbox" data-k="quiet"> Quiet hours (LEDs and sound off)</label>
+        <label>Quiet from (hour)<input type="number" min="0" max="23" data-k="quiet_from"></label>
+        <label>Quiet until (hour)<input type="number" min="0" max="23" data-k="quiet_to"></label>
+        <label>Agent alerts while focusing
+          <select data-k="focus_alerts">
+            <option value="off">LEDs and banner only</option>
+            <option value="soft">Soft chirp</option>
+            <option value="full">Full alert</option>
+          </select></label>
+        <label>Mascot name<input type="text" maxlength="20" data-k="name"></label>
+      </div>
+    </details>
+  </div>
+</main>
+<div id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let S = null, offset = 0, dragId = null;
+
+async function api(method, path, body) {
+  const r = await fetch(path, {method, headers: {'Content-Type': 'application/json'}, body: body ? JSON.stringify(body) : undefined});
+  if (!r.ok) toast((await r.text()).trim() || r.statusText);
+  return r.ok;
+}
+function toast(msg) {
+  const t = $('toast'); t.textContent = msg; t.style.display = 'block';
+  clearTimeout(toast.t); toast.t = setTimeout(() => t.style.display = 'none', 3500);
+}
+function el(tag, props = {}, ...kids) {
+  const e = Object.assign(document.createElement(tag), props);
+  kids.forEach(k => e.append(k));
+  return e;
+}
+
+function renderGoals() {
+  // Don't rebuild the list under someone's cursor.
+  if ($('goals').contains(document.activeElement) && document.activeElement.classList.contains('title')) return;
+  const ul = $('goals'); ul.replaceChildren();
+  if (!S.goals.length) ul.append(el('li', {className: 'empty', textContent: 'No goals yet. Type the first one above.'}));
+  for (const g of S.goals) {
+    const li = el('li', {className: 'goal' + (g.done ? ' done' : ''), draggable: true});
+    li.dataset.id = g.id;
+    const title = el('input', {className: 'title', value: g.title, ariaLabel: 'Goal'});
+    title.onkeydown = e => { if (e.key === 'Enter') title.blur(); if (e.key === 'Escape') { title.value = g.title; title.blur(); } };
+    title.onblur = () => { const v = title.value.trim(); if (v && v !== g.title) api('PATCH', '/api/goals/' + g.id, {title: v}); else title.value = g.title; };
+    const check = el('button', {className: 'check', title: g.done ? 'Mark not done' : 'Mark done', textContent: g.done ? '✓' : ''});
+    check.onclick = () => api('PATCH', '/api/goals/' + g.id, {done: !g.done});
+    const minus = el('button', {className: 'sm', textContent: '−', title: 'Fewer sessions'});
+    minus.onclick = () => api('PATCH', '/api/goals/' + g.id, {est: Math.max(0, g.est - 1)});
+    const plus = el('button', {className: 'sm', textContent: '+', title: 'More sessions'});
+    plus.onclick = () => api('PATCH', '/api/goals/' + g.id, {est: Math.min(12, g.est + 1)});
+    const est = el('span', {className: 'est'}, minus, el('span', {textContent: g.pomos + '/' + (g.est || '–') + ' 🍅'}), plus);
+    const go = el('button', {className: 'go', textContent: 'Focus', disabled: g.done || !S.device.connected});
+    go.onclick = () => api('POST', '/api/timer', {action: 'focus', goal: g.id, min: 0});
+    const del = el('button', {className: 'x', textContent: '×', title: 'Delete'});
+    del.onclick = () => api('DELETE', '/api/goals/' + g.id);
+    li.append(el('span', {className: 'grip', textContent: '⋮⋮'}), check, title, est, go, del);
+
+    li.ondragstart = () => { dragId = g.id; li.classList.add('dragging'); };
+    li.ondragend = () => { dragId = null; li.classList.remove('dragging'); };
+    li.ondragover = e => { e.preventDefault(); li.classList.add('over'); };
+    li.ondragleave = () => li.classList.remove('over');
+    li.ondrop = e => {
+      e.preventDefault(); li.classList.remove('over');
+      if (!dragId || dragId === g.id) return;
+      const ids = S.goals.map(x => x.id).filter(id => id !== dragId);
+      ids.splice(ids.indexOf(g.id), 0, dragId);
+      api('POST', '/api/reorder', {ids});
+    };
+    ul.append(li);
+  }
+}
+
+function renderRest() {
+  const d = new Date(S.date + 'T12:00:00');
+  $('heading').textContent = d.toLocaleDateString(undefined, {weekday: 'long', day: 'numeric', month: 'long'});
+  const done = S.goals.filter(g => g.done).length;
+  const parts = [];
+  if (S.goals.length) parts.push(done + ' of ' + S.goals.length + ' goals done');
+  if (S.pomos_today) parts.push(S.pomos_today + ' focus session' + (S.pomos_today === 1 ? '' : 's') + ' (' + S.focus_min + ' min)');
+  $('summary').textContent = parts.join(' · ') || 'A fresh day.';
+
+  $('devdot').className = 'dot' + (S.device.connected ? ' on' : '');
+  $('devtext').textContent = S.device.connected ? 'Presto connected' : 'Presto offline';
+
+  $('carry').hidden = !S.carry;
+  $('carrytext').textContent = S.carry + ' unfinished goal' + (S.carry === 1 ? '' : 's') + ' from last time.';
+
+  const ag = $('agents'); ag.replaceChildren();
+  if (!S.agents.length) ag.append(el('div', {className: 'sub', textContent: S.agents_note || 'No agents running.'}));
+  for (const a of S.agents) {
+    ag.append(el('div', {className: 'agent'}, el('span', {className: 'dot ' + a.state}),
+      el('span', {className: 'name', textContent: a.name}), el('span', {className: 'sub', textContent: a.kind}),
+      el('span', {className: 'state ' + a.state, textContent: a.state === 'waiting' ? 'needs you' : a.state})));
+  }
+  $('fake').hidden = !S.fake_agents;
+
+  for (const inp of document.querySelectorAll('#settings [data-k]')) {
+    if (inp === document.activeElement) continue;
+    const v = S.settings[inp.dataset.k];
+    if (inp.type === 'checkbox') inp.checked = !!v; else inp.value = v;
+  }
+  renderTimer();
+}
+
+function renderTimer() {
+  if (!S) return;
+  const t = S.device, on = t.connected;
+  const running = on && (t.phase === 'focus' || t.phase === 'break');
+  let remain = t.remain;
+  if (running && !t.paused) remain = Math.max(0, t.remain - Math.floor((Date.now() + offset - t.reported_at) / 1000));
+  $('time').textContent = running ? String(Math.floor(remain / 60)).padStart(2, '0') + ':' + String(remain % 60).padStart(2, '0') : '--:--';
+  $('time').style.color = !running ? 'var(--muted)' : (t.phase === 'break' ? 'var(--break)' : (t.paused ? 'var(--amber)' : 'var(--focus)'));
+  const goal = S.goals.find(g => g.id === t.goal);
+  let label = 'Nothing running';
+  if (!on) label = 'The Presto is not connected';
+  else if (t.breathing) label = 'Breathing session in progress';
+  else if (t.phase === 'focus') label = (t.paused ? 'Paused: ' : 'Focusing: ') + (goal ? goal.title : 'free focus');
+  else if (t.phase === 'break') label = 'On a break';
+  else if (t.phase === 'done') label = 'Session complete. Break time?';
+  $('timerlabel').textContent = label;
+  $('tfocus').disabled = !on || running;
+  $('tpause').disabled = !running; $('tpause').textContent = t.paused ? 'Resume' : 'Pause';
+  $('tbreak').disabled = !on || t.phase === 'break';
+  $('tstop').disabled = !on || t.phase === 'idle';
+}
+
+function apply(state) {
+  S = state; offset = S.now - Date.now();
+  renderGoals(); renderRest();
+}
+
+$('add').onkeydown = async e => {
+  if (e.key !== 'Enter') return;
+  let title = $('add').value.trim(), est = 0;
+  const m = title.match(/^(.*\S)\s+[x×*](\d{1,2})$/i);
+  if (m) { title = m[1]; est = Math.min(12, +m[2]); }
+  if (title && await api('POST', '/api/goals', {title, est})) $('add').value = '';
+};
+document.onkeydown = e => {
+  if (e.key === '/' && !/INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName)) { e.preventDefault(); $('add').focus(); }
+};
+$('carrybtn').onclick = () => api('POST', '/api/carryover');
+$('tfocus').onclick = () => { const g = S.goals.find(g => !g.done); api('POST', '/api/timer', {action: 'focus', goal: g ? g.id : '', min: 0}); };
+$('tpause').onclick = () => api('POST', '/api/timer', {action: 'pause'});
+$('tbreak').onclick = () => api('POST', '/api/timer', {action: 'break', min: 0});
+$('tstop').onclick = () => api('POST', '/api/timer', {action: 'stop'});
+for (const b of document.querySelectorAll('[data-fake]'))
+  b.onclick = () => api('POST', '/api/fake-agent', {name: $('fakename').value.trim(), state: b.dataset.fake});
+for (const inp of document.querySelectorAll('#settings [data-k]')) {
+  inp.onchange = () => {
+    const v = inp.type === 'checkbox' ? inp.checked : (inp.type === 'text' || inp.tagName === 'SELECT' ? inp.value : +inp.value);
+    api('PUT', '/api/settings', {[inp.dataset.k]: v});
+  };
+}
+
+const es = new EventSource('/api/events');
+es.onmessage = e => apply(JSON.parse(e.data));
+setInterval(renderTimer, 500);
+</script>
+</body>
+</html>
