@@ -77,7 +77,7 @@ func parseOrca(out []byte) ([]Agent, error) {
 		}
 		a := Agent{
 			ID:   firstString(obj, "orca_session_id", "orcaSessionId", "session_id", "sessionId", "id"),
-			Name: firstString(obj, "name", "title", "label", "worktree", "worktree_name", "worktreeName", "branch"),
+			Name: orcaName(obj),
 			Kind: firstString(obj, "agent", "agent_type", "agentType", "kind", "type", "provider"),
 		}
 		state, outcome := "", firstString(obj, "outcome")
@@ -100,13 +100,34 @@ func parseOrca(out []byte) ([]Agent, error) {
 		if a.Name == "" {
 			a.Name = a.ID
 		}
-		// Worktree paths make poor names on a small screen.
-		if i := strings.LastIndex(a.Name, "/"); i >= 0 && i < len(a.Name)-1 {
-			a.Name = a.Name[i+1:]
-		}
 		agents = append(agents, a)
 	}
 	return agents, nil
+}
+
+// orcaName names an agent "repo / workspace", which stays put for the life
+// of the agent. The title is the fallback: Claude Code rewrites it as the
+// conversation moves on, and it is often too long for the screen.
+func orcaName(obj map[string]any) string {
+	repo := lastPart(firstString(obj, "repo", "repository"))
+	ws := lastPart(firstString(obj, "workspace", "worktree", "worktree_name", "worktreeName"))
+	switch {
+	case repo != "" && ws != "" && ws != repo:
+		return repo + " / " + ws
+	case ws != "":
+		return ws
+	}
+	return firstString(obj, "name", "title", "label", "branch")
+}
+
+// lastPart keeps the final segment of a path, since worktree paths make poor
+// names on a small screen.
+func lastPart(s string) string {
+	s = strings.TrimRight(s, "/")
+	if i := strings.LastIndex(s, "/"); i >= 0 {
+		return s[i+1:]
+	}
+	return s
 }
 
 func normalizeState(state, outcome string) string {

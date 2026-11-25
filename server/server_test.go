@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -109,13 +110,31 @@ func TestStoreGoalsSessionsAndCarryOver(t *testing.T) {
 }
 
 func TestParseOrcaWrappedResult(t *testing.T) {
-	out := []byte(`{"id":"x","ok":true,"result":{"agents":[{"orcaSessionId":"s1","agent":"claude","state":"working","title":"fix-bug","workspace":"ws"}]}}`)
+	out := []byte(`{"id":"x","ok":true,"result":{"agents":[{"orcaSessionId":"s1","agent":"claude","state":"working","title":"Fix the login bug","workspace":"fix-bug","repo":"web-app"}]}}`)
 	agents, err := parseOrca(out)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(agents) != 1 || agents[0].ID != "s1" || agents[0].Name != "fix-bug" || agents[0].State != "working" {
+	if len(agents) != 1 || agents[0].ID != "s1" || agents[0].Name != "web-app / fix-bug" || agents[0].State != "working" {
 		t.Fatalf("got %+v", agents)
+	}
+}
+
+func TestOrcaName(t *testing.T) {
+	for in, want := range map[string]string{
+		`{"repo":"web-app","workspace":"fix-bug","title":"Fix the login bug"}`: "web-app / fix-bug",
+		`{"repo":"web-app","workspace":"web-app"}`:                             "web-app",
+		`{"workspace":"fix-bug","title":"Fix the login bug"}`:                  "fix-bug",
+		`{"repo":"web-app","title":"Fix the login/logout bug"}`:                "Fix the login/logout bug",
+		`{"repo":"org/web-app","worktree":"/src/wt/fix-bug/"}`:                 "web-app / fix-bug",
+	} {
+		var obj map[string]any
+		if err := json.Unmarshal([]byte(in), &obj); err != nil {
+			t.Fatal(err)
+		}
+		if got := orcaName(obj); got != want {
+			t.Errorf("orcaName(%s) = %q, want %q", in, got, want)
+		}
 	}
 }
 
